@@ -1,0 +1,16 @@
+global function PlaylistRotations_Def
+
+void function PlaylistRotations_Def()
+{
+    array<PlaylistRotationDefinition> playlists = []
+    PlaylistRotationDefinition currentPlaylist
+    
+    currentPlaylist = InitPlaylistRotation( "mcp", ePlaylistRotationType.GAMEMODE, "mcp" )
+    playlists.append( currentPlaylist )    
+
+    currentPlaylist = InitPlaylistRotation( "surf", ePlaylistRotationType.GAMEMODE, "surf", "mp_chroma_null_surf" )
+    currentPlaylist.timeOverwrite = 1800.0
+    playlists.append( currentPlaylist )    
+
+    SetPlaylistRotations( playlists )
+}

@@ -1,0 +1,126 @@
+global function PlaylistRotations_Init
+global function InitPlaylistRotation
+global function SetPlaylistRotations
+global function ClearNextPlaylistRotations
+
+global enum ePlaylistRotationType {
+    GAMEMODE
+    MAP
+}
+
+global struct PlaylistRotationDefinition {
+    string name = ""
+    table<string, string> convars = {}
+    string playlist = "" 
+    string map = ""
+    int ty = ePlaylistRotationType.GAMEMODE 
+    float ornull timeOverwrite = null
+}
+
+struct {
+    array<PlaylistRotationDefinition> store
+    array<PlaylistRotationDefinition> next
+    PlaylistRotationDefinition& current 
+} file
+
+void function PlaylistRotations_Init()
+{
+    if ( IsLobby() )
+    {
+        if ( file.store.len() == 0 )
+        {
+            print("no playlists")
+            return
+        }
+
+        if ( CheckPlaylistSwap() )
+        {
+            print("swaping playlists " + file.store.len() + " " + file.next.len())
+            if ( file.next.len() == 0 )
+            {
+                print("refreshing playlists")
+                file.next = clone file.store
+            }
+                
+            print("playlists state " + file.store.len() + " " + file.next.len())
+            file.next.randomize()
+            print("playlists state " + file.store.len() + " " + file.next.len())
+            file.current = clone file.next.pop()
+            print("playlists state " + file.store.len() + " " + file.next.len())
+        }        
+
+        if ( !NSIsDedicated() )
+        	ServerCommand( "setplaylist private_match" )
+
+        foreach ( string convar, string val in file.current.convars )
+            SetConVarString( convar, val )
+
+        thread WaitForPlayers()
+    }
+    else
+    {
+        thread WaitForGameStart()
+    }
+}
+
+void function WaitForGameStart()
+{
+    while ( GetGameState() != eGameState.Playing )
+        wait WaitFrame()
+
+    if ( file.current.timeOverwrite != null ) 
+        SetGameEndTime( expect float( file.current.timeOverwrite ) )
+}
+
+void function WaitForPlayers()
+{
+    while ( GetPlayerArray().len() == 0 )
+        wait WaitFrame()
+
+    string playlist = file.current.playlist == "" ? "tdm" : file.current.playlist
+    string map = file.current.map == "" ? file.current.playlist == "" ? "mp_forwardbase_kodai" : RandomPlaylistMap( file.current.playlist ) : file.current.map
+
+	ServerCommand( "setplaylist " + playlist )
+    SetConVarString( "mp_gamemode", file.current.playlist )
+    PrivateLobby_SetMap( map )
+    PrivateLobby_SetMode( playlist )
+    thread SetupPrivateMatchUIVarsWhenReady()
+
+    wait 1
+
+    thread SetupPrivateMatchUIVarsWhenReady()
+    PrivateLobby_StartMatch()
+}
+
+void function SetPlaylistRotations( array<PlaylistRotationDefinition> rotations )
+{
+    file.store = clone rotations
+}
+
+void function ClearNextPlaylistRotations()
+{
+    file.next = []
+}
+
+PlaylistRotationDefinition function InitPlaylistRotation( string name, int ty, string playlistName, string map = "" )
+{
+    PlaylistRotationDefinition playlist
+    playlist.name = name
+    playlist.ty = ty
+    playlist.playlist = playlistName
+    playlist.map = map
+
+    return playlist
+}
+
+string function RandomPlaylistMap( string playlist )
+{
+    array<string> maps = GetPlaylistMaps( playlist ) 
+    maps.randomize()
+    return maps.pop()
+}
+
+bool function CheckPlaylistSwap()
+{
+    return true
+}

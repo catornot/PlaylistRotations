@@ -1,0 +1,23 @@
+{
+    "Name": "cat_or_not.PlaylistRotations",
+    "Description": "Script to rotatate maps and gamemodes on some timer",
+    "Version": "0.0.1",
+
+    "LoadPriority": 3,
+    "Scripts": [
+        {
+            "Path": "_playlist_rotations.gnut",
+            "RunOn": "SERVER && MP",
+            "ServerCallback": {
+                "After": "PlaylistRotations_Init"
+            },
+        },
+        {
+            "Path": "_playlist_rotations_def.gnut",
+            "RunOn": "SERVER && MP",
+            "ServerCallback": {
+                "Before": "PlaylistRotations_Def"
+            },
+        }
+    ],
+}
