@@ -5,7 +5,7 @@ void function PlaylistRotations_Def()
     array<PlaylistRotationDefinition> playlists = []
     PlaylistRotationDefinition currentPlaylist
     
-    PlaylistRotationDefinition currentPlaylist = InitPlaylistRotation( "tdm", ePlaylistRotationType.GAMEMODE, "tdm" )
+    currentPlaylist = InitPlaylistRotation( "tdm", ePlaylistRotationType.GAMEMODE, "tdm" )
     playlists.append( currentPlaylist )
 
     SetPlaylistRotations( playlists )

@@ -2,7 +2,7 @@
     "Name": "cat_or_not.PlaylistRotations",
     "Description": "Script to rotatate maps and gamemodes on some timer",
     "Version": "0.0.1",
-
+    "InitScript": "_playlist_rotations_init.gnut",
     "LoadPriority": 3,
     "Scripts": [
         {
@@ -19,5 +19,8 @@
                 "Before": "PlaylistRotations_Def"
             },
         }
+    ],
+    "PluginDependencies": [
+        "SERIALIZEDIO",
     ],
 }

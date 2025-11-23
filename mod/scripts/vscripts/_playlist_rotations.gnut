@@ -3,20 +3,6 @@ global function InitPlaylistRotation
 global function SetPlaylistRotations
 global function ClearNextPlaylistRotations
 
-global enum ePlaylistRotationType {
-    GAMEMODE
-    MAP
-}
-
-global struct PlaylistRotationDefinition {
-    string name = ""
-    table<string, string> convars = {}
-    string playlist = "" 
-    string map = ""
-    int ty = ePlaylistRotationType.GAMEMODE 
-    float ornull timeOverwrite = null
-}
-
 struct {
     array<PlaylistRotationDefinition> store
     array<PlaylistRotationDefinition> next
@@ -25,6 +11,17 @@ struct {
 
 void function PlaylistRotations_Init()
 {
+    try {
+        #if SERIALIZEDIO
+            file.next = BPTypePun( BPLoadFile( "playlist_rotations" ) )
+        #else
+            throw "no SERIALIZEDIO"
+        #endif
+    } catch ( err ) {
+        print( "PlaylistRotations_Init " + err )
+        throw err
+    }
+    
     if ( IsLobby() )
     {
         if ( file.store.len() == 0 )
@@ -47,6 +44,12 @@ void function PlaylistRotations_Init()
             print("playlists state " + file.store.len() + " " + file.next.len())
             file.current = clone file.next.pop()
             print("playlists state " + file.store.len() + " " + file.next.len())
+
+            #if SERIALIZEDIO
+                BPSaveFile( "playlist_rotations", file.next )
+            #else
+                throw "no SERIALIZEDIO"
+            #endif
         }        
 
         if ( !NSIsDedicated() )

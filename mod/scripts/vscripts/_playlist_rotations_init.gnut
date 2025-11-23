@@ -1,0 +1,22 @@
+global function PlaylistRotationsInit_Init
+
+global enum ePlaylistRotationType {
+    GAMEMODE
+    MAP
+}
+
+global struct PlaylistRotationDefinition {
+    string name = ""
+    table<string, string> convars = {}
+    string playlist = "" 
+    string map = ""
+    int ty = ePlaylistRotationType.GAMEMODE 
+    float ornull timeOverwrite = null
+}
+
+void function PlaylistRotationsInit_Init()
+{
+    // ServerCommand( "help" )
+}
+
+
