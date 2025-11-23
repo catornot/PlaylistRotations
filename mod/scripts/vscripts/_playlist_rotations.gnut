@@ -19,7 +19,6 @@ void function PlaylistRotations_Init()
         #endif
     } catch ( err ) {
         print( "PlaylistRotations_Init " + err )
-        throw err
     }
     
     if ( IsLobby() )
