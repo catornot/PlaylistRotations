@@ -2,11 +2,13 @@ global function PlaylistRotations_Init
 global function InitPlaylistRotation
 global function SetPlaylistRotations
 global function ClearNextPlaylistRotations
+global function SetPlaylistRotationTime
 
 struct {
     array<PlaylistRotationDefinition> store
     array<PlaylistRotationDefinition> next
     PlaylistRotationDefinition& current 
+    int rotationTime = 60 * 60
 } file
 
 void function PlaylistRotations_Init()
@@ -51,8 +53,7 @@ void function PlaylistRotations_Init()
             #endif
         }        
 
-        if ( !NSIsDedicated() )
-        	ServerCommand( "setplaylist private_match" )
+    	ServerCommand( "setplaylist private_match" )
 
         foreach ( string convar, string val in file.current.convars )
             SetConVarString( convar, val )
@@ -99,6 +100,11 @@ void function SetPlaylistRotations( array<PlaylistRotationDefinition> rotations 
     file.store = clone rotations
 }
 
+void function SetPlaylistRotationTime( int t )
+{
+    file.rotationTime = t
+}
+
 void function ClearNextPlaylistRotations()
 {
     file.next = []
@@ -124,5 +130,27 @@ string function RandomPlaylistMap( string playlist )
 
 bool function CheckPlaylistSwap()
 {
-    return true
+    int nextplaylisttime = GetUnixTimestamp()
+
+    try {
+        #if SERIALIZEDIO
+            nextplaylisttime = expect int( BPLoadFile( "playlist_time" ) )
+        #endif
+    } catch ( err ) {
+        print( "CheckPlaylistSwap " + err )
+    }
+
+    if ( nextplaylisttime <= GetUnixTimestamp() )
+    {
+        try {
+            #if SERIALIZEDIO
+                BPSaveFile( "playlist_time", GetUnixTimestamp() + file.rotationTime )
+            #endif
+        } catch ( err ) {
+            print( "CheckPlaylistSwap " + err )
+        }
+        return true
+    }
+
+    return false
 }

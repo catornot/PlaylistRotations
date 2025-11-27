@@ -8,5 +8,6 @@ void function PlaylistRotations_Def()
     currentPlaylist = InitPlaylistRotation( "tdm", ePlaylistRotationType.GAMEMODE, "tdm" )
     playlists.append( currentPlaylist )
 
+    SetPlaylistRotationTime( 3600 )
     SetPlaylistRotations( playlists )
 }
