@@ -16,7 +16,9 @@ global struct PlaylistRotationDefinition {
 
 void function PlaylistRotationsInit_Init()
 {
-    // ServerCommand( "help" )
+    BPRegisterType( "array<PlaylistRotationDefinition>" )
+    BPRegisterType( "PlaylistRotationDefinition" )
+    BPRegisterType( "int" )
 }
 
 

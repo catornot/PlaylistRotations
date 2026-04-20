@@ -16,7 +16,9 @@ void function PlaylistRotations_Init()
 {
     try {
         #if SERIALIZEDIO
-            file.next = BPTypePun( BPLoadFile( "playlist_rotations" ) )
+            array< array< PlaylistRotationDefinition > > out_param
+            BPLoadFileArrayPlaylistRotationDefinition( "playlist_rotations", out_param )
+            file.next = out_param[0]
         #else
             throw "no SERIALIZEDIO"
         #endif
@@ -35,7 +37,9 @@ void function PlaylistRotations_Init()
         PlaylistRotationDefinition lastCurrent
         try {
             #if SERIALIZEDIO
-                lastCurrent = BPTypePun( BPLoadFile( "playlist_current" ) )[0]
+                array<PlaylistRotationDefinition> out_param
+                BPLoadFilePlaylistRotationDefinition( "playlist_current", out_param )
+                lastCurrent = out_param[0]
             #endif
         } catch ( err ) {
             print( "PlaylistRotations_Init " + err )
@@ -57,14 +61,14 @@ void function PlaylistRotations_Init()
             print("playlists state " + file.store.len() + " " + file.next.len())
 
             #if SERIALIZEDIO
-                BPSaveFile( "playlist_rotations", file.next )
+                BPSaveFileArrayPlaylistRotationDefinition( "playlist_rotations", file.next )
             #endif
         } else {
             file.current = lastCurrent
         }
 
         #if SERIALIZEDIO
-            BPSaveFile( "playlist_current", [ file.current ] ) // saving as an array because the type punning function can only output arrays of the struct
+            BPSaveFilePlaylistRotationDefinition( "playlist_current", file.current )
         #endif
 
     	ServerCommand( "setplaylist private_match" )
@@ -145,30 +149,21 @@ string function RandomPlaylistMap( string playlist )
 
 bool function CheckPlaylistSwap()
 {
-    int nextplaylisttime = GetUnixTimestamp()
+    array<int> nextplaylisttime = [ GetUnixTimestamp() ]
 
     try {
         #if SERIALIZEDIO
-            nextplaylisttime = expect int( BPLoadFile( "playlist_time" ) )
-        #endif
-    } catch ( err ) {
-        print( "CheckPlaylistSwap " + err )
-    }
-
-    // int fails? so just check for float too
-    try {
-        #if SERIALIZEDIO
-            nextplaylisttime = ( expect float( BPLoadFile( "playlist_time" ) ) ).tointeger()
+            BPLoadFileInt( "playlist_time", nextplaylisttime )
         #endif
     } catch ( err2 ) {
         print( "CheckPlaylistSwap " + err2 )
     }
 
-    if ( nextplaylisttime <= GetUnixTimestamp() )
+    if ( nextplaylisttime[0] <= GetUnixTimestamp() )
     {
         try {
             #if SERIALIZEDIO
-                BPSaveFile( "playlist_time", GetUnixTimestamp() + file.rotationTime )
+                BPSaveFileInt( "playlist_time", GetUnixTimestamp() + file.rotationTime )
             #endif
         } catch ( err ) {
             print( "CheckPlaylistSwap " + err )
@@ -197,7 +192,7 @@ void function SetNextPlaylistByName( string name )
     }
 
     #if SERIALIZEDIO
-        BPSaveFile( "playlist_current", [ playlist ] ) // saving as an array because the type punning function can only output arrays of the struct
-        BPSaveFile( "playlist_time", GetUnixTimestamp() + file.rotationTime )
+        BPSaveFilePlaylistRotationDefinition( "playlist_current", playlist )
+        BPSaveFileInt( "playlist_time", GetUnixTimestamp() + file.rotationTime )
     #endif
 }
