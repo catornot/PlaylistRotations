@@ -9,7 +9,8 @@ struct {
     array<PlaylistRotationDefinition> store
     array<PlaylistRotationDefinition> next
     PlaylistRotationDefinition& current 
-    int rotationTime = 60 * 60
+    int rotationTime = 60 * 8
+    string selectedMap = "mp_forwardbase_kodai"
 } file
 
 void function PlaylistRotations_Init()
@@ -71,7 +72,12 @@ void function PlaylistRotations_Init()
             BPSaveFilePlaylistRotationDefinition( "playlist_current", file.current )
         #endif
 
+        file.selectedMap = file.current.map == "" ? file.current.playlist == "" ? "mp_forwardbase_kodai" : RandomPlaylistMap( file.current.playlist ) : file.current.map 
+
     	ServerCommand( "setplaylist private_match" )
+        SetConVarString( "mp_gamemode", file.current.playlist )
+       	SetConVarString( "ns_private_match_last_mode", file.current.playlist )
+       	SetConVarString( "ns_private_match_last_map", file.selectedMap )
 
         foreach ( string convar, string val in file.current.convars )
             SetConVarString( convar, val )
@@ -95,23 +101,33 @@ void function WaitForGameStart()
 
 void function WaitForPlayers()
 {
-    while ( GetPlayerArray().len() == 0 )
+    while ( GetPlayerArray().len() == 0 || !AllPlayersConnnected() )
         wait WaitFrame()
 
-    string playlist = file.current.playlist == "" ? "tdm" : file.current.playlist
-    string map = file.current.map == "" ? file.current.playlist == "" ? "mp_forwardbase_kodai" : RandomPlaylistMap( file.current.playlist ) : file.current.map
-
-	ServerCommand( "setplaylist " + playlist )
+	ServerCommand( "setplaylist " + file.current.playlist )
     SetConVarString( "mp_gamemode", file.current.playlist )
-    PrivateLobby_SetMap( map )
-    PrivateLobby_SetMode( playlist )
+    PrivateLobby_SetMap( file.selectedMap )
+    PrivateLobby_SetMode( file.current.playlist )
     thread SetupPrivateMatchUIVarsWhenReady()
     print( "set playlist rotations to " + file.current.name )
 
-    wait 1
+    wait 2
 
     thread SetupPrivateMatchUIVarsWhenReady()
     PrivateLobby_StartMatch()
+
+    // just in case it fails
+    wait 5
+
+    thread SetupPrivateMatchUIVarsWhenReady()
+    PrivateLobby_StartMatch()
+}
+
+bool function AllPlayersConnnected() {
+    foreach( entity player in GetPlayerArray() )
+        if ( !player.hasConnected )
+            return false
+    return true
 }
 
 void function SetPlaylistRotations( array<PlaylistRotationDefinition> rotations )
